@@ -36,7 +36,7 @@ export const CompanyUsers = () => {
     const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
     // Available roles to assign (SUPER_ADMIN cannot be assigned scoped to a company)
-    const availableRoles = ['ADMIN', 'SALES', 'DESIGNER', 'PRODUCTION'];
+    const availableRoles = ['COMPANY_ADMIN', 'SALES', 'DESIGNER', 'PRODUCTION'];
 
     const filteredUsers = users?.filter(user => {
         const matchesSearch =

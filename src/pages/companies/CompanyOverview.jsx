@@ -28,7 +28,7 @@ export const CompanyOverview = () => {
         if (users && users.length >= 0) {
             setStats({
                 total: users.length,
-                admins: users.filter(u => u.role === 'ADMIN').length,
+                admins: users.filter(u => u.role === 'COMPANY_ADMIN').length,
                 designers: users.filter(u => u.role === 'DESIGNER').length,
                 production: users.filter(u => u.role === 'PRODUCTION').length
             });

@@ -4,7 +4,9 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../services/api';
-import { Building2, User, Mail, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Building2, User, Mail, Lock, CheckCircle2, AlertCircle, Globe } from 'lucide-react';
+
+const TIMEZONES = Intl.supportedValuesOf('timeZone');
 
 export const Signup = () => {
   const navigate = useNavigate();
@@ -18,7 +20,8 @@ export const Signup = () => {
     firstName: '',
     lastName: '',
     email: '',
-    password: ''
+    password: '',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   });
 
   const handleChange = (e) => {
@@ -42,7 +45,7 @@ export const Signup = () => {
 
     try {
       // Because there's no official endpoint documented for this yet, we hit a generic
-      // /api/auth/register-company that creates the company + the initial ADMIN user.
+      // /api/auth/register-company that creates the company + the initial COMPANY_ADMIN user.
       const response = await api.post('/auth/register-company', formData);
 
       if (response.data.success) {
@@ -157,6 +160,24 @@ export const Signup = () => {
                 onChange={handleSlugChange}
                 helperText="This will be used for your unique login portal."
               />
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-900 block">Timezone</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Globe className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <select
+                    name="timezone"
+                    value={formData.timezone}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-xl pl-10 px-4 py-2.5 bg-white text-gray-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  >
+                    {TIMEZONES.map(tz => (
+                      <option key={tz} value={tz}>{tz}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4 pt-4">

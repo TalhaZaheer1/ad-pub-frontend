@@ -14,11 +14,11 @@ import {
     TableRow,
 } from '../../components/ui/Table';
 import { Modal } from '../../components/ui/Modal';
-import { Plus, Search, Edit2, AlertCircle } from 'lucide-react';
+import { Plus, Search, Edit2, AlertCircle, Trash2 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 export const Users = () => {
-    const { users, isLoading, error, fetchUsers, createUser, updateUser, clearError } = useUserStore();
+    const { users, isLoading, error, fetchUsers, createUser, updateUser, deleteUser, clearError } = useUserStore();
     const { companies, fetchCompanies } = useCompanyStore();
     const currentUser = useAuthStore(state => state.user);
 
@@ -33,7 +33,7 @@ export const Users = () => {
         lastName: '',
         email: '',
         password: '',
-        role: 'ADMIN',
+        role: 'COMPANY_ADMIN',
         companyId: currentUser?.companyId || ''
     });
 
@@ -61,7 +61,7 @@ export const Users = () => {
             lastName: '',
             email: '',
             password: '',
-            role: currentUser?.role === 'SUPER_ADMIN' ? 'ADMIN' : 'SALES',
+            role: currentUser?.role === 'SUPER_ADMIN' ? 'COMPANY_ADMIN' : 'SALES',
             companyId: currentUser?.role === 'SUPER_ADMIN' ? (companies[0]?.id || '') : currentUser.companyId,
             isActive: true
         });
@@ -75,6 +75,7 @@ export const Users = () => {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
+            password: '',
             role: user.role,
             companyId: user.companyId || '',
             isActive: user.isActive
@@ -110,12 +111,18 @@ export const Users = () => {
         setIsSubmitting(true);
         setFormError('');
 
-        const res = await updateUser(selectedUser.id, {
+        const updatePayload = {
             firstName: formData.firstName,
             lastName: formData.lastName,
             role: formData.role,
-            isActive: formData.isActive
-        });
+            isActive: formData.isActive,
+            companyId: formData.companyId
+        };
+        if (formData.password) {
+            updatePayload.password = formData.password;
+        }
+
+        const res = await updateUser(selectedUser.id, updatePayload);
 
         setIsSubmitting(false);
         if (res.success) {
@@ -125,10 +132,19 @@ export const Users = () => {
         }
     };
 
+    const handleDelete = async (user) => {
+        if (window.confirm(`Are you sure you want to delete ${user.firstName} ${user.lastName}?`)) {
+            const res = await deleteUser(user.id, user.companyId);
+            if (!res.success) {
+                alert(res.error || 'Failed to delete user');
+            }
+        }
+    };
+
     const getRoleBadgeVariant = (role) => {
         switch (role) {
             case 'SUPER_ADMIN': return 'danger';
-            case 'ADMIN': return 'primary';
+            case 'COMPANY_ADMIN': return 'primary';
             case 'SALES': return 'success';
             case 'DESIGNER': return 'warning';
             case 'PRODUCTION': return 'default';
@@ -228,14 +244,27 @@ export const Users = () => {
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleOpenEdit(user)}
-                                        disabled={user.role === 'SUPER_ADMIN' && currentUser.id !== user.id}
-                                    >
-                                        <Edit2 className="w-4 h-4 text-gray-500" />
-                                    </Button>
+                                    <div className="flex justify-end gap-2 text-right">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleOpenEdit(user)}
+                                            disabled={user.role === 'SUPER_ADMIN' && currentUser.id !== user.id}
+                                        >
+                                            <Edit2 className="w-4 h-4 text-gray-500" />
+                                        </Button>
+                                        {(currentUser?.role === 'COMPANY_ADMIN' || currentUser?.role === 'SUPER_ADMIN') && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDelete(user)}
+                                                className="text-gray-400 hover:text-danger hover:bg-danger/10"
+                                                disabled={user.id === currentUser?.id || user.role === 'SUPER_ADMIN'}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))
@@ -293,7 +322,7 @@ export const Users = () => {
                                 required
                             >
                                 {currentUser?.role === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
-                                <option value="ADMIN">Admin</option>
+                                <option value="COMPANY_ADMIN">Company Admin</option>
                                 <option value="SALES">Sales</option>
                                 <option value="DESIGNER">Designer</option>
                                 <option value="PRODUCTION">Production</option>
@@ -376,7 +405,7 @@ export const Users = () => {
                             disabled={selectedUser?.role === 'SUPER_ADMIN' || selectedUser?.id === currentUser?.id}
                         >
                             {currentUser?.role === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
-                            <option value="ADMIN">Admin</option>
+                            <option value="COMPANY_ADMIN">Company Admin</option>
                             <option value="SALES">Sales</option>
                             <option value="DESIGNER">Designer</option>
                             <option value="PRODUCTION">Production</option>
@@ -409,6 +438,19 @@ export const Users = () => {
                             />
                         </button>
                     </div>
+
+                    {(currentUser?.role === 'COMPANY_ADMIN' || currentUser?.role === 'SUPER_ADMIN') && 
+                     (selectedUser?.role !== 'COMPANY_ADMIN' && selectedUser?.role !== 'SUPER_ADMIN') && (
+                        <div className="pt-4 mt-2 border-t border-gray-100">
+                            <Input
+                                label="New Password (optional)"
+                                type="password"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                helperText="Leave blank if you do not want to change the user's password."
+                            />
+                        </div>
+                    )}
 
                     <div className="pt-4 flex justify-end gap-3">
                         <Button

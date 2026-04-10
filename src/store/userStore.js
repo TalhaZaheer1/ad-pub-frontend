@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import api from '../services/api';
+import { userService } from '../services/userService';
+import { useAuthStore } from './authStore';
 
 export const useUserStore = create((set) => ({
     users: [],
@@ -10,7 +11,19 @@ export const useUserStore = create((set) => ({
     fetchUsers: async (params = {}) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await api.get('/users', { params });
+            const { user } = useAuthStore.getState();
+            // If they pass an explicit companyId (like in CompanyUsers.jsx), use it.
+            // Otherwise if they are COMPANY_ADMIN, restrict to their own company bounds.
+            const targetCompanyId = params.companyId || (user?.role !== 'SUPER_ADMIN' ? user?.companyId : null);
+
+            let response;
+            if (targetCompanyId) {
+                const { companyId, ...restParams } = params;
+                response = await userService.getCompanyUsers(targetCompanyId, restParams);
+            } else {
+                response = await userService.getPlatformUsers(params);
+            }
+
             set({ users: response.data.data, isLoading: false });
         } catch (error) {
             set({
@@ -24,7 +37,16 @@ export const useUserStore = create((set) => ({
     createUser: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await api.post('/users', userData);
+            const { user } = useAuthStore.getState();
+            const targetCompanyId = userData.companyId || (user?.role !== 'SUPER_ADMIN' ? user?.companyId : null);
+
+            let response;
+            if (targetCompanyId && user?.role !== 'SUPER_ADMIN') {
+                response = await userService.createCompanyUser(targetCompanyId, userData);
+            } else {
+                response = await userService.createPlatformUser(userData);
+            }
+
             const newUser = response.data.data;
 
             set((state) => ({
@@ -43,7 +65,16 @@ export const useUserStore = create((set) => ({
     updateUser: async (id, updateData) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await api.patch(`/users/${id}`, updateData);
+            const { user } = useAuthStore.getState();
+            const targetCompanyId = user?.role !== 'SUPER_ADMIN' ? user?.companyId : updateData.companyId;
+
+            let response;
+            if (targetCompanyId && user?.role !== 'SUPER_ADMIN') {
+                response = await userService.updateCompanyUser(targetCompanyId, id, updateData);
+            } else {
+                response = await userService.updatePlatformUser(id, updateData);
+            }
+
             const updatedUser = response.data.data;
 
             set((state) => ({
@@ -59,14 +90,21 @@ export const useUserStore = create((set) => ({
     },
 
     // Deactivate/remove a user
-    removeUser: async (id) => {
+    deleteUser: async (id, overrideCompanyId = null) => {
         set({ isLoading: true, error: null });
         try {
-            await api.delete(`/users/${id}`);
+            const { user } = useAuthStore.getState();
+            const targetCompanyId = overrideCompanyId || (user?.role !== 'SUPER_ADMIN' ? user?.companyId : null);
 
-            // Assuming soft delete updates the isActive status in the UI or removes it
+            if (targetCompanyId && user?.role !== 'SUPER_ADMIN') {
+                await userService.deleteCompanyUser(targetCompanyId, id);
+            } else {
+                await userService.deletePlatformUser(id);
+            }
+
+            // Remove the deleted user from the UI state
             set((state) => ({
-                users: state.users.map(u => u.id === id ? { ...u, isActive: false } : u),
+                users: state.users.filter(u => u.id !== id),
                 isLoading: false
             }));
             return { success: true };
