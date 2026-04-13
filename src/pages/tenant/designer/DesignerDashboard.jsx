@@ -6,19 +6,19 @@ import { publicationIssueService } from '../../../services/publicationIssueServi
 import { adTypeService } from '../../../services/adTypeService';
 import { userService } from '../../../services/userService';
 import { Button } from '../../../components/ui/Button';
-import { LayoutDashboard, MoreVertical, Copy, CheckCircle, ArrowRightCircle, Download, FileText, FileCode2, Search, Filter, CheckSquare, Square, Save, Scissors, X, Paperclip, FileImage, UploadCloud, ExternalLink, Trash2, Eye } from 'lucide-react';
+import { LayoutDashboard, MoreVertical, Copy, CheckCircle, ArrowRightCircle, Download, FileText, FileCode2, Search, Filter, CheckSquare, Square, Save, Scissors, X, Paperclip, FileImage, UploadCloud, ExternalLink, Trash2, Eye, ChevronRight } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { cn } from '../../../utils/cn';
 import { useAuthStore } from '../../../store/authStore';
 
 const DESIGN_STATUS_META = {
-  NOT_STARTED:   { label: 'Not Started',   color: 'bg-gray-100 text-gray-500' },
-  QUEUED:        { label: 'Queued',        color: 'bg-blue-50 text-blue-600' },
-  IN_DESIGN:     { label: 'In Design',     color: 'bg-indigo-50 text-indigo-700' },
+  NOT_STARTED: { label: 'Not Started', color: 'bg-gray-100 text-gray-500' },
+  QUEUED: { label: 'Queued', color: 'bg-blue-50 text-blue-600' },
+  IN_DESIGN: { label: 'In Design', color: 'bg-indigo-50 text-indigo-700' },
   NEEDS_CONTENT: { label: 'Needs Content', color: 'bg-orange-50 text-orange-600' },
   CONTENT_ADDED: { label: 'Content Added', color: 'bg-sky-50 text-sky-700' },
-  NEEDS_REVIEW:  { label: 'Needs Review',  color: 'bg-yellow-50 text-yellow-700' },
-  APPROVED:      { label: 'Approved',      color: 'bg-green-50 text-green-700' },
+  NEEDS_REVIEW: { label: 'Needs Review', color: 'bg-yellow-50 text-yellow-700' },
+  APPROVED: { label: 'Approved', color: 'bg-green-50 text-green-700' },
 };
 
 const OP_TAG_META = {
@@ -211,9 +211,9 @@ export const DesignerDashboard = () => {
 
     setActionLoading('bulk-export');
     try {
-      const res = await designerService.exportInDesignSnippet({ 
+      const res = await designerService.exportInDesignSnippet({
         adUnitIds: ids,
-        variant: forcedVariant || undefined 
+        variant: forcedVariant || undefined
       });
       // The response is now a raw XML string
       const xmlData = typeof res.data === 'string' ? res.data : res.data?.data?.snippets || '';
@@ -633,7 +633,7 @@ export const DesignerDashboard = () => {
                           <p className="text-sm font-medium text-gray-900 truncate text-left">{asset.filename || 'Asset'}</p>
                         </div>
                         <div className="flex items-center gap-1">
-                          <button 
+                          <button
                             onClick={() => setPreviewAsset(asset)}
                             className="p-1.5 text-gray-400 hover:text-indigo rounded-lg hover:bg-indigo/5 transition-colors" title="Preview">
                             <Eye className="w-4 h-4" />
@@ -661,7 +661,7 @@ export const DesignerDashboard = () => {
                       <p className="text-sm font-medium text-gray-900 truncate text-left">{asset.filename || 'Final PDF'}</p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button 
+                      <button
                         onClick={() => setPreviewAsset(asset)}
                         className="p-1.5 text-gray-400 hover:text-green-700 rounded-lg hover:bg-green-100 transition-colors" title="Preview">
                         <Eye className="w-4 h-4" />
@@ -737,8 +737,8 @@ export const DesignerDashboard = () => {
                 <a href={previewAsset.url} download className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all">
                   <Download className="w-3.5 h-3.5" /> Download
                 </a>
-                <button 
-                  onClick={() => setPreviewAsset(null)} 
+                <button
+                  onClick={() => setPreviewAsset(null)}
                   className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all"
                 >
                   <X className="w-6 h-6" />
@@ -748,31 +748,31 @@ export const DesignerDashboard = () => {
 
             <div className="flex-1 bg-gray-50 flex items-center justify-center overflow-hidden relative">
               {(previewAsset.format === 'application/pdf' || previewAsset.filename?.toLowerCase().endsWith('.pdf')) ? (
-              <div className="w-full h-full relative">
-                {pdfLoading && (
-                  <div className="absolute inset-0 z-20 bg-gray-50 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 border-4 border-indigo border-t-transparent rounded-full animate-spin mb-4" />
-                    <p className="text-sm text-gray-500 font-medium animate-pulse">Fetching high-resolution design...</p>
-                  </div>
-                )}
-                {pdfBlobUrl ? (
-                  <iframe 
-                    src={`${pdfBlobUrl}#toolbar=0`} 
-                    className="w-full h-full border-none"
-                    title="PDF Preview"
-                  />
-                ) : !pdfLoading && (
-                   <div className="text-center p-8">
-                    <p className="text-gray-500 font-medium">Preparing PDF preview...</p>
-                  </div>
-                )}
-              </div>
-            ) : previewAsset.format?.startsWith('image/') ? (
+                <div className="w-full h-full relative">
+                  {pdfLoading && (
+                    <div className="absolute inset-0 z-20 bg-gray-50 flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 border-4 border-indigo border-t-transparent rounded-full animate-spin mb-4" />
+                      <p className="text-sm text-gray-500 font-medium animate-pulse">Fetching high-resolution design...</p>
+                    </div>
+                  )}
+                  {pdfBlobUrl ? (
+                    <iframe
+                      src={`${pdfBlobUrl}#toolbar=0`}
+                      className="w-full h-full border-none"
+                      title="PDF Preview"
+                    />
+                  ) : !pdfLoading && (
+                    <div className="text-center p-8">
+                      <p className="text-gray-500 font-medium">Preparing PDF preview...</p>
+                    </div>
+                  )}
+                </div>
+              ) : previewAsset.format?.startsWith('image/') ? (
                 <div className="w-full h-full p-4 flex items-center justify-center">
-                  <img 
-                    src={previewAsset.url} 
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-sm bg-white shadow-xl ring-1 ring-black/5" 
-                    alt={previewAsset.filename} 
+                  <img
+                    src={previewAsset.url}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-sm bg-white shadow-xl ring-1 ring-black/5"
+                    alt={previewAsset.filename}
                   />
                 </div>
               ) : (
